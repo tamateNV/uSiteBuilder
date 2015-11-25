@@ -43,15 +43,29 @@ namespace Vega.USiteBuilder
             }
         }
 
+        private const string CurrentContentRequestCacheKey = "CurrentContent";
         /// <summary>
         /// Gets the current content being rendered.
         /// </summary>
         /// <returns></returns>
         public static DocumentTypeBase GetCurrentContent()
         {
-            return DocumentTypeResolver.Instance.GetTyped<DocumentTypeBase>(Node.GetCurrent());
-        }
+            DocumentTypeBase current = null;
+            if (HttpContext.Current != null && HttpContext.Current.Request != null)
+            {
+                current = HttpContext.Current.Items[CurrentContentRequestCacheKey] as DocumentTypeBase;
+            }
+            if (current == null)
+            {
+                current = DocumentTypeResolver.Instance.GetTyped<DocumentTypeBase>(Node.GetCurrent());
+                if (HttpContext.Current != null && HttpContext.Current.Request != null)
+                {
+                    HttpContext.Current.Items[CurrentContentRequestCacheKey] = current;
+                }
+            }
+            return current;
 
+        }
 		/// <summary>
 		/// Gets all ancestor nodes of a given type from a given node id.
 		/// (parent's path back to root)
